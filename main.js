@@ -1,7 +1,18 @@
 console.log('hello world');
-const apiUrl = 'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=62.1018472244196&lon=6.942135378172793&'
+const yrApiUrl = 'https://www.yr.no/api/v0/locations/1-175981'
+let apiUrl;
 const nowDate = new Date();
 let tempData;
+
+console.log(where(yrApiUrl));
+
+async function where(api) {
+    const response = await fetch(`${api}`);
+    const data = await response.json();
+    apiUrl = await `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${data.position.lat}&lon=${data.position.lon}&`
+    console.log(getFact());
+    return data
+}
 
 const getFact = async () => {
     const response = await fetch(`${apiUrl}`);
@@ -11,7 +22,6 @@ const getFact = async () => {
     highCharts(tempTime, tempData)
     return trueData
 }
-console.log(getFact());
 
 function cleanup(array) {
     let tempTime = [];
@@ -35,8 +45,8 @@ function highCharts(time, array) {
         },
         subtitle: {
             text: 'Source: ' +
-                '<a href="https://en.wikipedia.org/wiki/List_of_cities_by_average_temperature" ' +
-                'target="_blank">Wikipedia.com</a>'
+                '<a href="https://github.com/Thalion1/Wheater-test" ' +
+                'target="_blank">Me</a>'
         },
         xAxis: {
             categories: time
