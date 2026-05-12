@@ -1,17 +1,47 @@
 console.log('hello world');
-const yrApiUrl = 'https://www.yr.no/api/v0/locations/1-175981'
+// const yrApiUrl = 'https://www.yr.no/api/v0/locations/1-175981'
 let apiUrl;
 const nowDate = new Date();
 let tempData;
 
-console.log(where(yrApiUrl));
+const userInput = document.getElementById('where');
 
-async function where(api) {
-    const response = await fetch(`${api}`);
+async function whereAmI(input) {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${input}&format=jsonv2`);
     const data = await response.json();
-    apiUrl = await `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${data.position.lat}&lon=${data.position.lon}&`
-    console.log(getFact());
+    const [lat, lon] = await [data[0].lat, data[0].lon]
+    // console.log(lat, lon);
+    
+    return [lat, lon]
     return data
+}
+
+userInput.addEventListener('keydown', async (e) => {
+    if (e.keyCode === 13) {
+        let temp = userInput.value.trim().replaceAll(' ', '+')
+        console.log(temp);
+        const [lat, lon] = await whereAmI(temp)
+        console.log(lat);
+        console.log(where(lat, lon));
+
+        // console.log(whereAmI(temp));
+    }
+})
+
+
+// `https://nominatim.openstreetmap.org/search?q=${}&format=jsonv2`
+
+/*
+https://nominatim.openstreetmap.org/search?q=ørsta&&format=jsonv2
+*/
+
+
+function where(lat, lon) {
+    // const response = await fetch(`${api}`);
+    // const data = await response.json();
+    apiUrl = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}&`
+    console.log(getFact());
+    return apiUrl
 }
 
 const getFact = async () => {
@@ -26,7 +56,7 @@ const getFact = async () => {
 function cleanup(array) {
     let tempTime = [];
     let tempArray = [];
-    for (let i = 0; i < 25; i++) {// 2026-05-07T08:00:00Z
+    for (let i = 0; i < 25; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
         const element = array[i];
         tempTime.push(element.time.substr(11, 5));
         tempArray.push(element.data.instant.details.air_temperature);
@@ -45,7 +75,7 @@ function highCharts(time, array) {
         },
         subtitle: {
             text: 'Source: ' +
-                '<a href="https://github.com/Thalion1/Wheater-test" ' +
+                '<a href="https://github.com/Thalion1/Wheater-userInput" ' +
                 'target="_blank">Me</a>'
         },
         xAxis: {
@@ -68,8 +98,16 @@ function highCharts(time, array) {
             }
         },
         series: [{
-            name: 'Reggane',
+            lineColor: '#00f',
+            color: '#00f',
+            name: 'temprature for today',
             data: array
-        }]
+        }]/*,
+        series: [{
+            lineColor: '#0f0',
+            color: '#0f0',
+            name: 'userInput',
+            data: array
+        }]*/
     });
 }
