@@ -1,6 +1,7 @@
 console.log('hello world');
 // const yrApiUrl = 'https://www.yr.no/api/v0/locations/1-175981'
-let apiUrl;
+let metApiUrl;
+let pentApiUrl;
 const nowDate = new Date();
 let tempData;
 
@@ -39,32 +40,40 @@ https://nominatim.openstreetmap.org/search?q=ørsta&&format=jsonv2
 function where(lat, lon) {
     // const response = await fetch(`${api}`);
     // const data = await response.json();
-    apiUrl = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}&`
+    metApiUrl = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}&`
+    pentApiUrl = `https://pent.no/api/v2/long-term-forecast/${lat}/${lon}?days=9&resolution=1&resolution=6`
     console.log(getFact());
-    return apiUrl
+    return metApiUrl
 }
 
 const getFact = async () => {
-    const response = await fetch(`${apiUrl}`);
-    const data = await response.json();
-    const trueData = await data.properties.timeseries;
-    const [tempTime, tempData] = cleanup(trueData)
-    highCharts(tempTime, tempData)
-    return trueData
+    const metResponse = await fetch(`${metApiUrl}`);
+    const pentResponse = await fetch(`${pentApiUrl}`);
+    const metData = await metResponse.json();
+    const pentData = await pentResponse.json();
+    const trueMetData = await metData.properties.timeseries;
+    const [tempTime, tempMetData, tempYrData, tempStormData] = cleanup(trueMetData, pentData)
+    highCharts(tempTime, tempMetData, tempYrData, tempStormData);
+    return [trueMetData, pentData]
 }
 
-function cleanup(array) {
+function cleanup(metApi, pentApi) {
     let tempTime = [];
-    let tempArray = [];
-    for (let i = 0; i < 25; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
-        const element = array[i];
-        tempTime.push(element.time.substr(11, 5));
-        tempArray.push(element.data.instant.details.air_temperature);
+    let tempMetArray = [];
+    let tempYrArray = [];
+    let tempStormArray = [];
+    console.log(pentApi);
+    for (let i = 0; i < pentApi?.["1h"]?.yr?.[0]?.steps?.length; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
+        tempTime.push(metApi[i].time.substr(11, 5));
+        tempMetArray.push(metApi[i].data.instant.details.air_temperature);
+        tempYrArray.push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
+        tempStormArray.push(pentApi?.["1h"]?.storm?.[0]?.steps[i].temperature);
     }
-    return [tempTime, tempArray]
+    
+    return [tempTime, tempMetArray, tempYrArray, tempStormArray]
 }
 
-function highCharts(time, array) {
+function highCharts(time, met, yr, storm) {
     // Data retrieved https://en.wikipedia.org/wiki/List_of_cities_by_average_temperature
     Highcharts.chart('container', {
         chart: {
@@ -100,14 +109,18 @@ function highCharts(time, array) {
         series: [{
             lineColor: '#00f',
             color: '#00f',
-            name: 'temprature for today',
-            data: array
-        }]/*,
-        series: [{
+            name: 'met',
+            data: met
+        },{
             lineColor: '#0f0',
             color: '#0f0',
-            name: 'userInput',
-            data: array
-        }]*/
+            name: 'storm',
+            data: storm
+        },{
+            lineColor: '#f00',
+            color: '#f00',
+            name: 'yr',
+            data: yr
+        }]
     });
 }
