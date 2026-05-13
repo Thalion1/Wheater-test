@@ -52,36 +52,43 @@ const getFact = async () => {
     const metData = await metResponse.json();
     const pentData = await pentResponse.json();
     const trueMetData = await metData.properties.timeseries;
-    const [tempTime, avrageArray, tempMetData, tempYrData, tempStormData] = cleanup(trueMetData, pentData)
-    highCharts(tempTime, avrageArray, tempMetData, tempYrData, tempStormData);
+    highCharts(cleanup(trueMetData, pentData))// inputing the colective array
     return [trueMetData, pentData]
 }
 
 function cleanup(metApi, pentApi) {
-    let tempTime = [];
-    let tempMetArray = [];
-    let tempYrArray = [];
-    let tempStormArray = [];
-    let avrageArray = [];
+    let colectivArray = [
+        [],// 0 time
+        [],// 1 avrage
+        [],// 2 met
+        [],// 3 yr
+        []// 4 storm
+    ]
+    // let tempTime = [];
+    // let tempMetArray = [];
+    // let tempYrArray = [];
+    // let tempStormArray = [];
+    // let avrageArray = [];
     console.log(pentApi);
     for (let i = 0; i < pentApi?.["1h"]?.yr?.[0]?.steps?.length; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
-        tempTime.push(pentApi["1h"].yr[0].steps[i].startDate.substr(11, 5));
-        tempMetArray.push(metApi[i].data.instant.details.air_temperature);
-        tempYrArray.push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
-        tempStormArray.push(pentApi?.["1h"]?.storm?.[0]?.steps[i].temperature);
+        colectivArray[0].push(pentApi["1h"].yr[0].steps[i].startDate.substr(11, 5));
+        colectivArray[2].push(metApi[i].data.instant.details.air_temperature);
+        colectivArray[3].push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
+        colectivArray[4].push(pentApi?.["1h"]?.storm?.[0]?.steps[i].temperature);
     }
+    console.log(colectivArray);
     for (let i = 0; i < pentApi["1h"].yr[0].steps.length; i++) {
         let tempAvrage = 0
-        tempAvrage += tempMetArray[i];
-        tempAvrage += tempYrArray[i];
-        tempAvrage += tempStormArray[i];
-        avrageArray.push(tempAvrage / 3)
+        for (let x = 2; x < colectivArray.length; x++) {
+            tempAvrage += colectivArray[x][i];
+        }
+        colectivArray[1].push(tempAvrage / (colectivArray.length - 2))// pushing the avrage value for the time
     }
     
-    return [tempTime, avrageArray, tempMetArray, tempYrArray, tempStormArray]
+    return colectivArray// returning the collective array
 }
 
-function highCharts(time, avrage, met, yr, storm) {
+function highCharts(array) {
     // Data retrieved https://en.wikipedia.org/wiki/List_of_cities_by_average_temperature
     Highcharts.chart('container', {
         chart: {
@@ -96,7 +103,7 @@ function highCharts(time, avrage, met, yr, storm) {
                 'target="_blank">Me</a>'
         },
         xAxis: {
-            categories: time
+            categories: array[0]// time
         },
         yAxis: {
             title: {
@@ -114,26 +121,26 @@ function highCharts(time, avrage, met, yr, storm) {
                 enableMouseTracking: false
             }
         },
-        series: [{
+        series: [{// 
+            lineColor: '#000',
+            color: '#000',
+            name: 'avrage',
+            data: array[1]// avrage
+        },{
             lineColor: '#00f',
             color: '#00f',
             name: 'met',
-            data: met
-        },{
-            lineColor: '#0f0',
-            color: '#0f0',
-            name: 'storm',
-            data: storm
+            data: array[2]// met
         },{
             lineColor: '#f00',
             color: '#f00',
             name: 'yr',
-            data: yr
+            data: array[3]// yr
         },{
-            lineColor: '#000',
-            color: '#000',
-            name: 'avrage',
-            data: avrage
+            lineColor: '#0f0',
+            color: '#0f0',
+            name: 'storm',
+            data: array[4]// storm
         }]
     });
 }
