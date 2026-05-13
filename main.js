@@ -64,7 +64,7 @@ function cleanup(metApi, pentApi) {
     let tempStormArray = [];
     console.log(pentApi);
     for (let i = 0; i < pentApi?.["1h"]?.yr?.[0]?.steps?.length; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
-        tempTime.push(metApi[i].time.substr(11, 5));
+        tempTime.push(pentApi["1h"].yr[0].steps[i].startDate.substr(11, 5));
         tempMetArray.push(metApi[i].data.instant.details.air_temperature);
         tempYrArray.push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
         tempStormArray.push(pentApi?.["1h"]?.storm?.[0]?.steps[i].temperature);
