@@ -52,8 +52,8 @@ const getFact = async () => {
     const metData = await metResponse.json();
     const pentData = await pentResponse.json();
     const trueMetData = await metData.properties.timeseries;
-    const [tempTime, tempMetData, tempYrData, tempStormData] = cleanup(trueMetData, pentData)
-    highCharts(tempTime, tempMetData, tempYrData, tempStormData);
+    const [tempTime, avrageArray, tempMetData, tempYrData, tempStormData] = cleanup(trueMetData, pentData)
+    highCharts(tempTime, avrageArray, tempMetData, tempYrData, tempStormData);
     return [trueMetData, pentData]
 }
 
@@ -62,6 +62,7 @@ function cleanup(metApi, pentApi) {
     let tempMetArray = [];
     let tempYrArray = [];
     let tempStormArray = [];
+    let avrageArray = [];
     console.log(pentApi);
     for (let i = 0; i < pentApi?.["1h"]?.yr?.[0]?.steps?.length; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
         tempTime.push(pentApi["1h"].yr[0].steps[i].startDate.substr(11, 5));
@@ -69,11 +70,18 @@ function cleanup(metApi, pentApi) {
         tempYrArray.push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
         tempStormArray.push(pentApi?.["1h"]?.storm?.[0]?.steps[i].temperature);
     }
+    for (let i = 0; i < pentApi["1h"].yr[0].steps.length; i++) {
+        let tempAvrage = 0
+        tempAvrage += tempMetArray[i];
+        tempAvrage += tempYrArray[i];
+        tempAvrage += tempStormArray[i];
+        avrageArray.push(tempAvrage / 3)
+    }
     
-    return [tempTime, tempMetArray, tempYrArray, tempStormArray]
+    return [tempTime, avrageArray, tempMetArray, tempYrArray, tempStormArray]
 }
 
-function highCharts(time, met, yr, storm) {
+function highCharts(time, avrage, met, yr, storm) {
     // Data retrieved https://en.wikipedia.org/wiki/List_of_cities_by_average_temperature
     Highcharts.chart('container', {
         chart: {
@@ -121,6 +129,11 @@ function highCharts(time, met, yr, storm) {
             color: '#f00',
             name: 'yr',
             data: yr
+        },{
+            lineColor: '#000',
+            color: '#000',
+            name: 'avrage',
+            data: avrage
         }]
     });
 }
