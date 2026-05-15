@@ -2,7 +2,8 @@ console.log('hello world');
 // const yrApiUrl = 'https://www.yr.no/api/v0/locations/1-175981'
 let metApiUrl;
 let pentApiUrl;
-const nowDate = new Date();
+const now = new Date().toISOString();
+// const hours = now.getHours();
 let tempData;
 
 const userInput = document.getElementById('where');
@@ -59,28 +60,35 @@ const getFact = async () => {
 function cleanup(metApi, pentApi) {
     let colectivArray = [
         [],// 0 time
-        [],// 1 avrage
-        [],// 2 met
-        [],// 3 yr
-        []// 4 storm
+        [],// 1 avrage temp
+        [// 2 met
+            [],// temp
+            [] // precipitation/rain
+        ],
+        [// 3 yr
+            [],// temp
+            [] // precipitation/rain
+        ],
+        [// 4 storm
+            [],// temp
+            [] // precipitation/rain
+        ]
     ]
-    // let tempTime = [];
-    // let tempMetArray = [];
-    // let tempYrArray = [];
-    // let tempStormArray = [];
-    // let avrageArray = [];
     console.log(pentApi);
     for (let i = 0; i < pentApi?.["1h"]?.yr?.[0]?.steps?.length; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
         colectivArray[0].push(pentApi["1h"].yr[0].steps[i].startDate.substr(11, 5));
-        colectivArray[2].push(metApi[i].data.instant.details.air_temperature);
-        colectivArray[3].push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
-        colectivArray[4].push(pentApi?.["1h"]?.storm?.[0]?.steps[i].temperature);
+        colectivArray[2][0].push(metApi[i].data.instant.details.air_temperature);
+        colectivArray[2][1].push(metApi[i].data.instant.details.precipitation_amount ?? 0);
+        colectivArray[3][0].push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
+        colectivArray[3][1].push(pentApi?.["1h"]?.yr?.[0]?.steps[i].precipitation);
+        colectivArray[4][0].push(pentApi?.["1h"]?.storm?.[0]?.steps[i].temperature);
+        colectivArray[4][1].push(pentApi?.["1h"]?.storm?.[0]?.steps[i].precipitation);
     }
     console.log(colectivArray);
     for (let i = 0; i < pentApi["1h"].yr[0].steps.length; i++) {
         let tempAvrage = 0
         for (let x = 2; x < colectivArray.length; x++) {
-            tempAvrage += colectivArray[x][i];
+            tempAvrage += colectivArray[x][0][i];
         }
         colectivArray[1].push(tempAvrage / (colectivArray.length - 2))// pushing the avrage value for the time
     }
@@ -90,7 +98,7 @@ function cleanup(metApi, pentApi) {
 
 function highCharts(array) {
     // Data retrieved https://en.wikipedia.org/wiki/List_of_cities_by_average_temperature
-    Highcharts.chart('container', {
+    Highcharts.chart('temp-container', {
         chart: {
             type: 'spline'
         },
@@ -130,17 +138,50 @@ function highCharts(array) {
             lineColor: '#00f',
             color: '#00f',
             name: 'met',
-            data: array[2]// met
+            data: array[2][0]// met
         },{
             lineColor: '#f00',
             color: '#f00',
             name: 'yr',
-            data: array[3]// yr
+            data: array[3][0]// yr
         },{
             lineColor: '#0f0',
             color: '#0f0',
             name: 'storm',
-            data: array[4]// storm
+            data: array[4][0]// storm
         }]
     });
+    Highcharts.chart('precipitation-container', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Rain for the day'
+        },
+        xAxis: {
+            categories: array[0]// time
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Precipitation (mm)'
+            }
+        },
+        tooltip: {
+            valueSuffix: 'mm'
+        },
+        series: [
+        {
+            name: 'met',
+            data: array[2][1]
+        },{
+            name: 'yr',
+            data: array[3][1]
+        },
+        {
+            name: 'storm',
+            data: array[4][1]
+        }
+        ]
+    })
 }
