@@ -78,7 +78,8 @@ function cleanup(metApi, pentApi) {
     for (let i = 0; i < pentApi?.["1h"]?.yr?.[0]?.steps?.length; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
         colectivArray[0].push(pentApi["1h"].yr[0].steps[i].startDate.substr(11, 5));
         colectivArray[2][0].push(metApi[i].data.instant.details.air_temperature);
-        colectivArray[2][1].push(metApi[i].data.instant.details.precipitation_amount ?? 0);
+        // colectivArray[2][1].push(metApi[i].data.instant.details.precipitation_amount ?? 0);
+        colectivArray[2][1].push(metApi[i].data.next_1_hours.details.precipitation_amount)
         colectivArray[3][0].push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
         colectivArray[3][1].push(pentApi?.["1h"]?.yr?.[0]?.steps[i].precipitation);
         colectivArray[4][0].push(pentApi?.["1h"]?.storm?.[0]?.steps[i].temperature);
