@@ -78,7 +78,6 @@ function cleanup(metApi, pentApi) {
     for (let i = 0; i < pentApi?.["1h"]?.yr?.[0]?.steps?.length; i++) {// time format 2026-05-07T08:00:00Z Year Month Day Time Time-Zone
         colectivArray[0].push(pentApi["1h"].yr[0].steps[i].startDate.substr(11, 5));
         colectivArray[2][0].push(metApi[i].data.instant.details.air_temperature);
-        // colectivArray[2][1].push(metApi[i].data.instant.details.precipitation_amount ?? 0);
         colectivArray[2][1].push(metApi[i].data.next_1_hours.details.precipitation_amount)
         colectivArray[3][0].push(pentApi?.["1h"]?.yr?.[0]?.steps[i].temperature);
         colectivArray[3][1].push(pentApi?.["1h"]?.yr?.[0]?.steps[i].precipitation);
@@ -131,23 +130,23 @@ function highCharts(array) {
             }
         },
         series: [{// 
-            lineColor: '#000',
-            color: '#000',
+            lineColor: '#CC79A7',
+            color: '#CC79A7',
             name: 'avrage',
             data: array[1]// avrage
         },{
-            lineColor: '#00f',
-            color: '#00f',
+            lineColor: '#0072B2',
+            color: '#0072B2',
             name: 'met',
             data: array[2][0]// met
         },{
-            lineColor: '#f00',
-            color: '#f00',
+            lineColor: '#E69F00',
+            color: '#E69F00',
             name: 'yr',
             data: array[3][0]// yr
         },{
-            lineColor: '#0f0',
-            color: '#0f0',
+            lineColor: '#009E73',
+            color: '#009E73',
             name: 'storm',
             data: array[4][0]// storm
         }]
@@ -174,13 +173,16 @@ function highCharts(array) {
         series: [
         {
             name: 'met',
+            color: '#0072B2',
             data: array[2][1]
         },{
             name: 'yr',
+            color: '#E69F00',
             data: array[3][1]
         },
         {
             name: 'storm',
+            color: '#009E73',
             data: array[4][1]
         }
         ]
